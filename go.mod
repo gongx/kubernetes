@@ -223,6 +223,7 @@ require (
 )
 
 replace (
+	github.com/google/cadvisor => github.com/gongx/cadvisor v0.0.1
 	k8s.io/api => ./staging/src/k8s.io/api
 	k8s.io/apiextensions-apiserver => ./staging/src/k8s.io/apiextensions-apiserver
 	k8s.io/apimachinery => ./staging/src/k8s.io/apimachinery

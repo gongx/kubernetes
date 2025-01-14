@@ -499,6 +499,11 @@ func Fits(pod *v1.Pod, nodeInfo *framework.NodeInfo, opts ResourceRequestsOption
 func fitsRequest(podRequest *preFilterState, nodeInfo *framework.NodeInfo, ignoredExtendedResources, ignoredResourceGroups sets.Set[string]) []InsufficientResource {
 	insufficientResources := make([]InsufficientResource, 0, 4)
 
+	if val, ok := nodeInfo.Node().Labels["over-subscription"]; ok && val == "true" {
+		// If the node has the label "over-subscription=false", we will skip checking the resources.
+		return insufficientResources
+	}
+
 	allowedPodNumber := nodeInfo.Allocatable.AllowedPodNumber
 	if len(nodeInfo.Pods)+1 > allowedPodNumber {
 		insufficientResources = append(insufficientResources, InsufficientResource{

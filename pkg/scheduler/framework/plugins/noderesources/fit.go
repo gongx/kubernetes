@@ -441,7 +441,10 @@ func fitsRequest(podRequest *preFilterState, nodeInfo *framework.NodeInfo, ignor
 		return insufficientResources
 	}
 
-	if podRequest.MilliCPU > 0 && podRequest.MilliCPU > (nodeInfo.Allocatable.MilliCPU-nodeInfo.Requested.MilliCPU) {
+	skipCpuCheck := nodeInfo.Node() != nil && nodeInfo.Node().Labels[framework.CPUOverSubscription] == "true"
+	skipMemoryCheck := nodeInfo.Node() != nil && nodeInfo.Node().Labels[framework.MemOverSubscription] == "true"
+
+	if !skipCpuCheck && podRequest.MilliCPU > 0 && podRequest.MilliCPU > (nodeInfo.Allocatable.MilliCPU-nodeInfo.Requested.MilliCPU) {
 		insufficientResources = append(insufficientResources, InsufficientResource{
 			ResourceName: v1.ResourceCPU,
 			Reason:       "Insufficient cpu",
@@ -450,7 +453,7 @@ func fitsRequest(podRequest *preFilterState, nodeInfo *framework.NodeInfo, ignor
 			Capacity:     nodeInfo.Allocatable.MilliCPU,
 		})
 	}
-	if podRequest.Memory > 0 && podRequest.Memory > (nodeInfo.Allocatable.Memory-nodeInfo.Requested.Memory) {
+	if !skipMemoryCheck && podRequest.Memory > 0 && podRequest.Memory > (nodeInfo.Allocatable.Memory-nodeInfo.Requested.Memory) {
 		insufficientResources = append(insufficientResources, InsufficientResource{
 			ResourceName: v1.ResourceMemory,
 			Reason:       "Insufficient memory",

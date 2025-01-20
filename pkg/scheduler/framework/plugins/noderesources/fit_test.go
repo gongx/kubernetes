@@ -19,6 +19,7 @@ package noderesources
 import (
 	"context"
 	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"reflect"
 	"testing"
 
@@ -486,12 +487,35 @@ func TestEnoughRequests(t *testing.T) {
 			name:                      "skip checking resource request with quantity zero",
 			wantInsufficientResources: []InsufficientResource{},
 		},
+		{
+			pod: newResourcePod(framework.Resource{MilliCPU: 1, Memory: 1}),
+			nodeInfo: framework.NewNodeInfo(
+				newResourcePod(framework.Resource{MilliCPU: 10, Memory: 20})),
+			name:                      "too many resources but over-subscription allowed",
+			wantInsufficientResources: []InsufficientResource{},
+		},
 	}
 
 	for _, test := range enoughPodsTests {
 		t.Run(test.name, func(t *testing.T) {
-			node := v1.Node{Status: v1.NodeStatus{Capacity: makeResources(10, 20, 32, 5, 20, 5), Allocatable: makeAllocatableResources(10, 20, 32, 5, 20, 5)}}
-			test.nodeInfo.SetNode(&node)
+			if test.name == "too many resources but over-subscription allowed" {
+				node := v1.Node{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: map[string]string{
+							framework.CPUOverSubscription: "true",
+							framework.MemOverSubscription: "true",
+						},
+					},
+					Status: v1.NodeStatus{
+						Capacity:    makeResources(10, 20, 32, 5, 20, 5),
+						Allocatable: makeAllocatableResources(10, 20, 32, 5, 20, 5),
+					},
+				}
+				test.nodeInfo.SetNode(&node)
+			} else {
+				node := v1.Node{Status: v1.NodeStatus{Capacity: makeResources(10, 20, 32, 5, 20, 5), Allocatable: makeAllocatableResources(10, 20, 32, 5, 20, 5)}}
+				test.nodeInfo.SetNode(&node)
+			}
 
 			if test.args.ScoringStrategy == nil {
 				test.args.ScoringStrategy = defaultScoringStrategy

@@ -1122,6 +1122,6 @@ func (h HostPortInfo) sanitize(ip, protocol *string) {
 
 // Constants for resource over-subscription.
 const (
-	CPUOverSubscription = "coupang.com/boltx/cpu-oversubscription"
-	MemOverSubscription = "coupang.com/boltx/memory-oversubscription"
+	CPUOverSubscription = "coupang.com/boltx-cpu-oversubscription"
+	MemOverSubscription = "coupang.com/boltx-memory-oversubscription"
 )
